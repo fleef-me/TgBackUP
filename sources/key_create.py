@@ -30,15 +30,12 @@ from config import get_env, Settings
 def create():
     settings: Settings = get_env()
 
-    fullpath_secretkey = path_workdir / "data" / settings.SECRETKEYFILE.get_secret_value()
-    is_file_exists = os.path.exists(fullpath_secretkey)
+    secret_key_path = path_workdir / "data" / settings.SECRETKEYFILE.get_secret_value()
 
-    if not is_file_exists:
-        key = get_random_bytes(32)
-        with open(fullpath_secretkey, 'wb') as file:
-            file.write(key)
+    if not secret_key_path.is_file():
+        secret_key_path.write_bytes(get_random_bytes(32))
 
-        print("\n", "***" * 20, f"Secret key created! \n -> ({fullpath_secretkey})", "***" * 20, sep="\n")
+        print("\n", "***" * 20, f"Secret key created! \n -> ({secret_key_path})", "***" * 20, sep="\n")
 
 
 if __name__ == '__main__':
