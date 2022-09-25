@@ -1,0 +1,6 @@
+data/*
+results/*
+tmp/*
+__pycache__
+bin/*
+.idea

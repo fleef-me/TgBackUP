@@ -1,0 +1,8 @@
+#!/usr/bin/env sh
+
+main() {
+    cd -P -- "$(dirname -- "$0")" || return
+    python3 -m pip install -r requirements.txt
+}
+
+main "$@"; exit $?
