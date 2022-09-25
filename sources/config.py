@@ -39,11 +39,11 @@ def get_env() -> Settings:
     try:
         return Settings()
     except ValidationError as error:
-        message_json = json.loads(error.json())[0]
-        no_set_param = message_json["loc"][0]
-        message_error = message_json["msg"]
+        print('ERROR: .env file is incorrect:')
 
-        print(dedent(f"WARNING:\n -> [{no_set_param}]: {message_error}\n"))
+        for entry in json.loads(error.json()):
+            print(f"\t{' -> '.join(map(str, entry['loc']))}:")
+            print(f"\t\t{entry['msg']}")
 
         sys.exit(1)
 
