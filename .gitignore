@@ -1,6 +1,6 @@
-data/*
-results/*
-tmp/*
+data/.env
+data/files.json
+data/SecretKey.bin
+data/session.session
 __pycache__
-bin/*
 .idea

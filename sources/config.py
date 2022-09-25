@@ -36,6 +36,20 @@ class Settings(BaseSettings):
 
 
 def get_env() -> Settings:
+    if not (path_workdir / "data" / "files.json").is_file():
+        (path_workdir / "data" / "files.json").write_text(dedent("""\
+            {}
+        """))
+
+    if not (path_workdir / "data" / ".env").is_file():
+        (path_workdir / "data" / ".env").write_text(dedent("""\
+            TG_APP_ID=
+            SESSION_NAME=""
+            DEBUG=False
+            CID_CHANNEL=""
+            SECRETKEYFILE=""
+            TG_APP_HASH=""
+        """))
     try:
         return Settings()
     except ValidationError as error:
