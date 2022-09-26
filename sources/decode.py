@@ -92,7 +92,12 @@ async def uploading_file_storage(client, json_files, cloud_files, cloud_files_na
         index_file = int(input(f"{range_c} -> "))
         file_binary = cloud_binary_files[index_file]
     except (IndexError, ValueError):
-        print("", "***" * 10, f"Write a number from {range_c[0]} to {range_c[-1]}", "***" * 10, sep="\n")
+        print(
+            "", "***" * 10,
+            f"Write a number from {range_c[0]} to {range_c[-1]}",
+            "***" * 10,
+            sep="\n"
+        )
         sys.exit(0)
 
     print(f"Selected: {file_binary}")
@@ -105,7 +110,10 @@ async def uploading_file_storage(client, json_files, cloud_files, cloud_files_na
 
     messages = []
     async with client:
-        async for message in client.search_messages(settings.CID_CHANNEL, query=file_binary, limit=10):
+        async for message in client.search_messages(
+                                                    chat_id=settings.CID_CHANNEL,
+                                                    query=file_binary,
+                                                    limit=10):
             if message.document and message.document.file_name == file_binary:
                 messages.append(message)
 
@@ -156,15 +164,19 @@ async def main():
             found = False
 
         if not found:
-            print(f"File not found in data/files.json. I can't find the original filename. Text: \n\n{plaintext_encode}")
+            print(
+                f"File not found in data/files.json. " +
+                "I can't find the original filename. Text: \n\n{plaintext_encode}"
+            )
         elif found:
             original_filename = str(path_workdir) + "/results/" + value.replace("/", "+")
             with open(original_filename, "wb") as file:
                 file.write(plaintext_encode)
 
             print(
-                f"\nThe file was successfully created and placed on the path: \n -> {original_filename}\n"
-                + f"Original filename: \n -> {value}\n")
+                f"\nThe file was successfully created and placed on the path: \n -> "
+                + original_filename
+                + f"\nOriginal filename: \n -> {value}\n")
 
         os.remove(file_binary)
 
