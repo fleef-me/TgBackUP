@@ -20,8 +20,6 @@ def main():
             return None
         if query == "y":
             break
-        else:
-            continue
 
     path_workdir = Path(__file__).resolve().parent.parent
 
