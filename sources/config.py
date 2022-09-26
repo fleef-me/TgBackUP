@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
-# Copyright 2022 Andrew Ivanov <okolefleef@disr.it>
-# All rights reserved
+# SPDX-FileCopyrightText: 2022 Andrew Ivanov <okolefleef@disr.it>
+# SPDX-License-Identifier: ISC
 
 import sys
 import json
