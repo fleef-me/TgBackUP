@@ -33,7 +33,7 @@ endlocal & exit /B %ERRORLEVEL%
         set "ERRORLEVEL=1" & goto :end
     )
 
-    py -3 sources/decode.py
+    py -3 src/decode.py
 %end%
 
 :main

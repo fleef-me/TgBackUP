@@ -33,7 +33,7 @@ endlocal & exit /B %ERRORLEVEL%
         set "ERRORLEVEL=1" & goto :end
     )
 
-    py -3 -B sources/clean.py
+    py -3 -B src/clean.py
 %end%
 
 :main

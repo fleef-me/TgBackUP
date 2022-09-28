@@ -2,7 +2,7 @@
 
 main() {
     cd -P -- "$(dirname -- "$0")" || return
-    python3 sources/decode.py
+    python3 src/decode.py
 }
 
 main "$@"; exit $?

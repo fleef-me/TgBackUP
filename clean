@@ -2,7 +2,7 @@
 
 main() {
     cd -P -- "$(dirname -- "$0")" || return
-    python3 -B sources/clean.py
+    python3 -B src/clean.py
 }
 
 main "$@"; exit $?
