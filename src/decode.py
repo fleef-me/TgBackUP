@@ -9,18 +9,19 @@
 import json
 import platform
 import sys
-import os
 import asyncio
-from typing import Tuple
+import shutil
 from pathlib import Path
-from gzip import decompress
+
+import codec
+from config import get_env, Settings
+from key_create import create
 
 
 path_workdir = Path(__file__).resolve().parent.parent
 
 try:
     from pyrogram import Client
-    from Crypto.Cipher import ChaCha20
 except ImportError:
     if platform.system() == "Windows":
         print(f"You forgot to run the installer.\n -> ({path_workdir}/install.cmd)")
@@ -28,10 +29,6 @@ except ImportError:
         print(f"You forgot to run the installer.\n -> ({path_workdir}/install)")
 
     sys.exit(1)
-
-
-from config import get_env, Settings
-from key_create import create
 
 
 settings: Settings = get_env()
@@ -43,35 +40,13 @@ if settings.DEBUG:
     logging.basicConfig(level=logging.DEBUG)
 
 
-def encode(private_key, nonce, ciphertext):
-    try:
-        cipher = ChaCha20.new(key=private_key, nonce=nonce)
-        plaintext_local = decompress(cipher.decrypt(ciphertext))
-
-        return plaintext_local
-
-    except (ValueError, KeyError):
-        raise RuntimeError("Incorrect decryption")
-
-
-def read_binary_file(pathfile_bin: str) -> Tuple[bytes, bytes]:
-    with open(pathfile_bin, 'rb') as file:
-        nonce = file.read(8)
-        ciphertext = file.read()
-
-    return nonce, ciphertext
-
-
 async def get_cloud_files(client: Client):
-    async with client:
-        me = await client.get_me()
-        print(f"The client ({me.id}) is authorized!")
-        messages = []
-        async for message in client.get_chat_history(settings.CID_CHANNEL):
-            if message.document:
-                messages.append(message.document)  # .file_name
+    messages = []
+    async for message in client.get_chat_history(settings.CID_CHANNEL):
+        if message.document:
+            messages.append(message)
 
-        return messages
+    return messages
 
 
 async def uploading_file_storage(client, json_files, cloud_files, cloud_files_name) -> list:
@@ -81,107 +56,78 @@ async def uploading_file_storage(client, json_files, cloud_files, cloud_files_na
     for value, key in json_files.items():
         if value in cloud_files_name:
             for cf in cloud_files:
-                if cf.file_name == value:
-                    cloud_binary_files.append(value)
-                    pretty_text += f"[{c}]: {key} ({cf.date})\n"
+                if cf.document.file_name == value:
+                    cloud_binary_files.append(cf)
+                    pretty_text += f"[{c}]: {key} ({cf.document.date})\n"
                     c += 1
 
     print(f"Select the file to be decrypted: \n{pretty_text}")
     range_c = list(range(c))
+    range_c.append("exit")
     try:
-        index_file = int(input(f"{range_c} -> "))
+        ask_user = input(f"[{', '.join(map(str, range_c))}] -> ")
+        if ask_user == "exit":
+            print("Operation aborted by user")
+            sys.exit(1)
+
+        index_file = int(ask_user)
         file_binary = cloud_binary_files[index_file]
     except (IndexError, ValueError):
-        print(
-            "", "***" * 10,
-            f"Write a number from {range_c[0]} to {range_c[-1]}",
-            "***" * 10,
-            sep="\n"
-        )
-        sys.exit(0)
+        print("", "***" * 10, f"Write a number from {range_c[0]} to {range_c[-1]}", "***" * 10, sep="\n")
+        sys.exit(1)
 
-    print(f"Selected: {file_binary}")
-    cloud_binary_file = json_files[file_binary]
+    print(f"Selected: {file_binary.document.file_name}")
 
-    for cf in cloud_files:
-        if cf.file_name == cloud_binary_file:
-            file_binary = cf
-            break
+    buffer = await file_binary.download(in_memory=True)
+    buffer.seek(0)
 
-    messages = []
-    async with client:
-        async for message in client.search_messages(
-                                                    chat_id=settings.CID_CHANNEL,
-                                                    query=file_binary,
-                                                    limit=10):
-            if message.document and message.document.file_name == file_binary:
-                messages.append(message)
-
-        files_binary = []
-        for file_message in messages:
-            file_binary = f"{str(path_workdir)}/bin/{file_binary}"
-            await file_message.download(file_name=file_binary)
-
-            files_binary.append(file_binary)
-
-    return files_binary
+    return buffer
 
 
 async def main():
+    path_workdir_data = path_workdir / "data"
     client: Client = Client(
-        name=f"{path_workdir}/data/{settings.SESSION_NAME}",
+        name=str(path_workdir_data / settings.SESSION_NAME),
         api_id=settings.TG_APP_ID,
         api_hash=settings.TG_APP_HASH.get_secret_value()
     )
-    cloud_files = await get_cloud_files(client)
-    cloud_files_name = [cf.file_name for cf in cloud_files]
 
-    with open(path_workdir / "data" / "files.json", "r") as file_local:
-        json_files = json.loads(file_local.read())
+    async with client:
+        me = await client.get_me()
+        print(f"The client ({me.id}) is authorized!\n")
 
-    if not cloud_files:
-        print("File not found in cloud storage")
-        sys.exit(0)
+        cloud_files = await get_cloud_files(client)
+        cloud_files_name = [cf.document.file_name for cf in cloud_files]
 
-    files_binary = await uploading_file_storage(client, json_files, cloud_files, cloud_files_name)
+        json_files = json.loads((path_workdir_data / "files.json").read_text())
 
-    with open(path_workdir / "data" / settings.SECRETKEYFILE.get_secret_value(), 'rb') as file:
-        private_key = file.read()
+        if not cloud_files:
+            print("File not found in cloud storage")
+            sys.exit(1)
 
-    for file_binary in files_binary:
-        result = read_binary_file(file_binary)
-        plaintext_encode = encode(
-            private_key=private_key, nonce=result[0], ciphertext=result[1]
-        )
-        with open(path_workdir / "data" / "files.json", "r") as file_local:
-            json_files = json.loads(file_local.read())
+        buffer = await uploading_file_storage(client, json_files, cloud_files, cloud_files_name)
 
-        for key, value in json_files.items():
-            if key == file_binary.split("/")[-1]:
-                found = True
-                break
+    private_key = (path_workdir_data / settings.SECRETKEYFILE.get_secret_value()).read_bytes()
+    value_path = Path(json_files[buffer.name])
 
-            found = False
+    if value_path.drive:
+        value_parts = [value_path.drive.rstrip(":")]
+    else:
+        value_parts = []
 
-        if not found:
-            print(
-                f"File not found in data/files.json. " +
-                "I can't find the original filename. Text: \n\n{plaintext_encode}"
-            )
-        elif found:
-            original_filename = str(path_workdir) + "/results/" + value.replace("/", "+")
-            with open(original_filename, "wb") as file:
-                file.write(plaintext_encode)
+    value_parts += value_path.relative_to(value_path.anchor).parts
 
-            print(
-                f"\nThe file was successfully created and placed on the path: \n -> "
-                + original_filename
-                + f"\nOriginal filename: \n -> {value}\n")
+    original_filename = path_workdir / "results" / "+".join(value_parts)
 
-        os.remove(file_binary)
+    with codec.open(buffer, 'rb', private_key) as input_file:
+        with open(original_filename, 'wb') as output_file:
+            shutil.copyfileobj(input_file, output_file)
+
+    print(f"\nThe file was successfully created on the path:\n -> {original_filename}")
+    print(f"Original filename: \n -> {json_files[buffer.name]}\n")
 
 if __name__ == "__main__":
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
-        sys.exit(0)
+        sys.exit(1)

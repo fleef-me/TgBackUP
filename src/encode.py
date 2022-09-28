@@ -6,21 +6,24 @@
 # Python-Requires:
 #   >= 3.7
 
-import os
 import json
 import platform
 import sys
 import asyncio
 import hashlib
+import shutil
+from io import BytesIO
 from pathlib import Path
-from gzip import compress
+
+import codec
+from config import get_env, Settings
+from key_create import create
 
 
 path_workdir = Path(__file__).resolve().parent.parent
 
 try:
     from pyrogram import Client
-    from Crypto.Cipher import ChaCha20
 except ImportError:
     if platform.system() == "Windows":
         print(f"You forgot to run the installer.\n -> ({path_workdir}/install.cmd)")
@@ -28,10 +31,6 @@ except ImportError:
         print(f"You forgot to run the installer.\n -> ({path_workdir}/install)")
 
     sys.exit(1)
-
-
-from config import get_env, Settings
-from key_create import create
 
 
 settings: Settings = get_env()
@@ -43,106 +42,66 @@ if settings.DEBUG:
     logging.basicConfig(level=logging.DEBUG)
 
 
-def decode(private_key, plaintext):
-    cipher = ChaCha20.new(key=private_key)
-    ciphertext = cipher.encrypt(compress(plaintext))
-
-    return {'nonce': cipher.nonce, 'ciphertext': ciphertext}
-
-
-def write_binary_file(pathfile_bin: Path, nonce: bytes, ciphertext: bytes) -> None:
-    with open(pathfile_bin, 'wb') as file:
-        file.write(nonce)
-        file.write(ciphertext)
+def progress(current, total):
+    print(end=f"\rFile upload: {(current * 100 / total):.2f}%", flush=True)
 
 
 def filename_hashing(filename_input: str) -> str:
+    path_workdir_fj = path_workdir / "data" / "files.json"
+    json_files = json.loads(path_workdir_fj.read_bytes())
+
     sha = hashlib.sha1(filename_input.encode())
-    sha1_filename_output = sha.hexdigest() + os.urandom(3).hex() + ".bin"
-
-    with open(path_workdir / "data" / "files.json", "r") as file_local:
-        json_files = json.loads(file_local.read())
-
+    sha1_filename_output = sha.hexdigest() + ".bin"
     json_files[sha1_filename_output] = filename_input
-    json_files = json.dumps(json_files)
 
-    with open(path_workdir / "data" / "files.json", "w") as file_local:
-        file_local.write(json_files)
+    path_workdir_fj.write_text(json.dumps(json_files))
 
     return sha1_filename_output
 
 
-async def upload_binary_file(filename_output: Path):
+async def upload_binary_file(buffer: BytesIO):
     client: Client = Client(
-        name=f"{path_workdir}/data/{settings.SESSION_NAME}",
+        name=str(path_workdir / "data" / settings.SESSION_NAME),
         api_id=settings.TG_APP_ID,
         api_hash=settings.TG_APP_HASH.get_secret_value()
     )
 
     async with client:
         me = await client.get_me()
-        print(f"The client ({me.id}) is authorized!")
 
-        filename_output_name = filename_output.name
-        messages = []
-        async for message in client.get_chat_history(settings.CID_CHANNEL):
-            if message.document:
-                messages.append(message.document.file_name)
-
-        if filename_output_name in messages:
-            while True:
-                query = input(
-                    "The file has been found in the repository.\n" +
-                    "Are you sure you want to download it again?\n [y/n] -> "
-                )
-                if query == "n":
-                    print("Operation aborted by user")
-                    return None
-                if query == "y":
-                    break
-                else:
-                    print()
-                    continue
-
+        print(f"The client ({me.id}) is authorized!\n")
         print(f"Uploading file to https://t.me/{settings.CID_CHANNEL}...")
+
         message = await client.send_document(
             chat_id=settings.CID_CHANNEL,
             protect_content=True,
-            document=str(filename_output),
+            document=buffer,
+            progress=progress
         )
-        print(f"File uploaded successfully! Link: {message.link}")
-        os.remove(filename_output)
-        print(f"The local file has been deleted. ({filename_output})")
+
+        print(f"\nFile uploaded successfully! Link: {message.link}\n")
 
 
 def main():
-    filename_input = input("Enter the full path to the file:\n -> ")
+    filename = input("Enter the full path to the file:\n -> ")
+    private_key = (path_workdir / "data" / settings.SECRETKEYFILE.get_secret_value()).read_bytes()
 
-    try:
-        with open(filename_input, "rb") as file:
-            plaintext = file.read()
-    except (PermissionError, FileNotFoundError, IsADirectoryError) as ex:
-        print("", "***" * 20, ex, "***" * 20, sep="\n")
-        sys.exit(0)
+    with BytesIO() as buffer:
+        buffer.name = filename_hashing(filename)
 
-    filename_output = filename_hashing(filename_input)
+        try:
+            with open(filename, 'rb') as input_file:
+                with codec.open(buffer, 'wb', private_key) as output_file:
+                    shutil.copyfileobj(input_file, output_file)
+        except OSError as ex:
+            print("", "***" * 20, ex, "***" * 20, sep="\n")
+            sys.exit(0)
 
-    with open(path_workdir / "data" / settings.SECRETKEYFILE.get_secret_value(), 'rb') as file:
-        private_key = file.read()
-        result = decode(private_key, plaintext)
-
-    filename_output_full = path_workdir / "tmp/" / filename_output
-    write_binary_file(
-        filename_output_full,
-        result["nonce"],
-        result["ciphertext"]
-    )
-
-    asyncio.run(upload_binary_file(filename_output_full))
+        asyncio.run(upload_binary_file(buffer))
 
 
 if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        sys.exit(0)
+        sys.exit(1)
