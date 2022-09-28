@@ -8,7 +8,7 @@ from textwrap import dedent
 
 
 def main():
-    dirs = ("bin", "data", "results", "tmp", "src/__pycache__")
+    dirs = ("data", "results", "src/__pycache__")
 
     while True:
         query = input(
