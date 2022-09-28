@@ -10,6 +10,9 @@ import sys
 import platform
 from pathlib import Path
 
+from config import get_env, Settings
+
+
 path_workdir = Path(__file__).resolve().parent.parent
 
 try:
@@ -23,8 +26,6 @@ except ImportError:
     sys.exit(1)
 
 
-from config import get_env, Settings
-
 
 def create():
     settings: Settings = get_env()
@@ -32,9 +33,12 @@ def create():
     secret_key_path = path_workdir / "data" / settings.SECRETKEYFILE.get_secret_value()
 
     if not secret_key_path.is_file():
-        secret_key_path.write_bytes(get_random_bytes(32))
+        secret_key_path.write_bytes(get_random_bytes(40))
 
-        print("\n", "***" * 20, f"Secret key created! \n -> ({secret_key_path})", "***" * 20, sep="\n")
+        print(
+            '***' * 15,
+            f"\n\n-> Secret key created!\n\t{secret_key_path}\n",
+        )
 
 
 if __name__ == '__main__':
