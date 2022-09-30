@@ -41,7 +41,7 @@ Introduction
 Windows (for UNIX-like systems use similar files without "cmd" )
 
  1. Start encode.cmd and fill in the full path to file, which one are you going to encrypt. (Repeat, if you need more files)
- 2. Follow the instructions -- log in Telegram using confirmation code and two-step verification (if you have any).
+ 2. Follow the instructions -- log in Telegram (at first start) using confirmation code and two-step verification (if you have any).
  3. If you need to decode file, use decode.cmd and choose the file you need using his number in list.
  4. if you need to wipe all your data, use clean.cmd.
 
