@@ -55,7 +55,7 @@ Credits
 Support
 ------
 
-BTC: bc1ql45kmzjtnecxjnz68ga4j3wg0cy6ud9jdqzxq4
-ETH: 0x6374d088B44a0BE458d95555F82a01af254e3D78
-TRX: TBTEQathMgzG54ifLduSTyKrDZpFNK2U54
+1. BTC: bc1ql45kmzjtnecxjnz68ga4j3wg0cy6ud9jdqzxq4
+2. ETH: 0x6374d088B44a0BE458d95555F82a01af254e3D78
+3. TRX: TBTEQathMgzG54ifLduSTyKrDZpFNK2U54
 
