@@ -6,15 +6,15 @@ with ChaCha20 encryption and Gzip compression on Telegram servers.
 
 .. image:: https://img.shields.io/github/languages/code-size/fleef-me/TgBackUP
    :alt: GitHub code size in bytes
-   :target: https://github.com/fleef-me/TgBackUP/
+   :target: https://github.com/fleef-me/TgBackUP/archive/refs/heads/master.zip
 
 .. image:: https://img.shields.io/github/last-commit/fleef-mE/TgBackUP
    :alt: GitHub last commit
-   :target: https://github.com/fleef-me/TgBackUP/
+   :target: https://github.com/fleef-me/TgBackUP/commits/master
 
 .. image:: https://img.shields.io/github/issues/fleef-me/TgBackUP
    :alt: GitHub issues
-   :target: https://github.com/fleef-me/TgBackUP/
+   :target: https://github.com/fleef-me/TgBackUP/issues
 
 .. contents::
 
