@@ -33,7 +33,7 @@ For more detailed instructions, write to me on `Telegram`_ or email <okolefleef@
 Installation
 ------------
 
-Windows (for UNIX-like systems use files without "cmd" )
+Windows (for UNIX-like systems use similar files without "cmd" )
 
  1. Unpack the project in a directory convenient for you, go to it. 
  2. Start install.cmd.
@@ -43,7 +43,7 @@ Windows (for UNIX-like systems use files without "cmd" )
 Introduction
 ------------
 
-Windows Windows (for UNIX-like systems use files without "cmd" )
+Windows (for UNIX-like systems use similar files without "cmd" )
 
  1. Start encode.cmd and fill in the full path to file, which one are you going to encrypt. (Repeat, if you need more files)
  2. Follow the instructions -- log in Telegram using confirmation code and two-step verification (if you have any).
