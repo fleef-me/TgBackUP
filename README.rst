@@ -8,11 +8,6 @@ with ChaCha20 encryption and Gzip compression on Telegram servers.
    :alt: GitHub code size in bytes
    :target: https://github.com/fleef-me/TgBackUP/
 
-.. image:: https://img.shields.io/github/stars/ ;fleef-me/TgBackUP
-   :alt: GitHub Repo stars
-   :target: https://github.com/fleef-me/TgBackUP/
-
-
 .. image:: https://img.shields.io/github/last-commit/fleef-mE/TgBackUP
    :alt: GitHub last commit
    :target: https://github.com/fleef-me/TgBackUP/
