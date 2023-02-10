@@ -119,9 +119,8 @@ async def main():
 
     original_filename = path_workdir / "results" / "+".join(value_parts)
 
-    with codec.open(buffer, 'rb', private_key) as input_file:
-        with open(original_filename, 'wb') as output_file:
-            shutil.copyfileobj(input_file, output_file)
+    with codec.open(buffer, 'rb', private_key) as input_file, open(original_filename, 'wb') as output_file:
+        shutil.copyfileobj(input_file, output_file)
 
     print(f"\nThe file was successfully created on the path:\n -> {original_filename}")
     print(f"Original filename: \n -> {json_files[buffer.name]}\n")
