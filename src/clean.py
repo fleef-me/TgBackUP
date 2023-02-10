@@ -49,7 +49,7 @@ def main():
         CID_CHANNEL="mydatabackup"
         SECRETKEYFILE="SecretKey.bin"
         TG_APP_HASH="fdkfdkfdkfd"
-        
+
         # TG_APP_HASH & TG_APP_ID:
         # # https://core.telegram.org/api/obtaining_api_id
         # SESSION_NAME & SECRETKEYFILE - any
