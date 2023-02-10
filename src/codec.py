@@ -64,9 +64,8 @@ class EncryptedFile:
 @contextmanager
 def open(file, mode, key):
     if isinstance(file, (str, bytes, PathLike)):
-        with builtins.open(file, mode) as file:
-            with open(file, mode, key) as xfile:
-                yield xfile
+        with builtins.open(file, mode) as file, open(file, mode, key) as xfile:
+            yield xfile
     elif hasattr(file, 'read') or hasattr(file, 'write'):
         with GzipFile(fileobj=EncryptedFile(file, key), mode=mode) as xfile:
             yield xfile
@@ -75,9 +74,8 @@ def open(file, mode, key):
 
 
 def decode(data, key):
-    with BytesIO(data) as buffer:
-        with open(buffer, 'rb', key) as file:
-            return file.read()
+    with BytesIO(data) as buffer, open(buffer, 'rb', key) as file:
+        return file.read()
 
 
 def encode(data, key):

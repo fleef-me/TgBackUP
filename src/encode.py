@@ -90,9 +90,8 @@ def main():
         buffer.name = filename_hashing(filename)
 
         try:
-            with open(filename, 'rb') as input_file:
-                with codec.open(buffer, 'wb', private_key) as output_file:
-                    shutil.copyfileobj(input_file, output_file)
+            with open(filename, 'rb') as input_file, codec.open(buffer, 'wb', private_key) as output_file:
+                shutil.copyfileobj(input_file, output_file)
         except OSError as ex:
             print("", "***" * 20, ex, "***" * 20, sep="\n")
             sys.exit(0)
